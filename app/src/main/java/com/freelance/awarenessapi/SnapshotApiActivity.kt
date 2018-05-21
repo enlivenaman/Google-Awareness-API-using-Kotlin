@@ -1,58 +1,41 @@
 package com.freelance.awarenessapi
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.design.widget.Snackbar
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import com.freelance.awarenessapi.R.id.fab
-import com.freelance.awarenessapi.R.id.toolbar
-
-import kotlinx.android.synthetic.main.activity_main.*
-import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.awareness.Awareness
-import com.google.android.gms.location.DetectedActivity
-import com.google.android.gms.location.ActivityRecognitionResult
-import com.google.android.gms.location.places.ui.PlaceAutocomplete.getStatus
 import com.google.android.gms.awareness.snapshot.DetectedActivityResult
-import android.support.annotation.NonNull
-import android.support.v4.app.ActivityCompat
-import android.support.v4.app.FragmentActivity
-import android.support.v4.content.ContextCompat
-import android.util.Log
-import com.google.android.gms.common.api.ResultCallback
-import kotlinx.android.synthetic.main.content_main.*
 import com.google.android.gms.awareness.state.HeadphoneState
-import com.google.android.gms.location.places.ui.PlaceAutocomplete.getStatus
-import com.google.android.gms.awareness.snapshot.HeadphoneStateResult
-import com.google.android.gms.location.places.ui.PlaceAutocomplete.getStatus
-import com.google.android.gms.location.places.PlaceLikelihood
-import com.google.android.gms.location.places.ui.PlaceAutocomplete.getStatus
-import com.google.android.gms.awareness.snapshot.PlacesResult
-import com.google.android.gms.awareness.snapshot.WeatherResult
-import com.google.android.gms.awareness.state.Weather
+import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.common.api.ResultCallback
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.content_main.*
 
 
-class MainActivity : AppCompatActivity() {
+class SnapshotApiActivity : AppCompatActivity() {
     private var mGoogleApiClient: GoogleApiClient? = null
     private val TAG = "Awareness"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        mGoogleApiClient = GoogleApiClient.Builder(this@MainActivity)
+        mGoogleApiClient = GoogleApiClient.Builder(this@SnapshotApiActivity)
                 .addApi(Awareness.API)
                 .build()
         mGoogleApiClient?.connect()
         if (ContextCompat.checkSelfPermission(
-                        this@MainActivity,
+                        this@SnapshotApiActivity,
                         android.Manifest.permission.ACCESS_FINE_LOCATION) !=
                 PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
-                    this@MainActivity,
+                    this@SnapshotApiActivity,
                     arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
                     1
             );
@@ -61,19 +44,19 @@ class MainActivity : AppCompatActivity() {
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                     .setAction("Action", null).show()
         }
-        ContextChooseActivity.setOnClickListener{view->
+        ContextChooseActivity.setOnClickListener { view ->
             initActivitySnapshots();
         }
-        ContextChooseHeadphone.setOnClickListener{view->
+        ContextChooseHeadphone.setOnClickListener { view ->
             initHeadPhoneSnapshots();
         }
-        ContextChooseLocation.setOnClickListener{view->
+        ContextChooseLocation.setOnClickListener { view ->
             initLocationSnapshots()
         }
-        ContextChoosePlace.setOnClickListener{view->
+        ContextChoosePlace.setOnClickListener { view ->
             initPlaceSnapshots();
         }
-        ContextChooseWeather.setOnClickListener{view->
+        ContextChooseWeather.setOnClickListener { view ->
             initWeatherSnapshots();
         }
 
@@ -110,7 +93,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 })
     }
-    private fun initHeadPhoneSnapshots(){
+
+    private fun initHeadPhoneSnapshots() {
         Awareness.SnapshotApi.getHeadphoneState(mGoogleApiClient)
                 .setResultCallback(ResultCallback { headphoneStateResult ->
                     if (!headphoneStateResult.status.isSuccess) {
@@ -130,7 +114,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @SuppressLint("MissingPermission")
-    private fun initLocationSnapshots(){
+    private fun initLocationSnapshots() {
         Awareness.SnapshotApi.getLocation(mGoogleApiClient)
                 .setResultCallback(ResultCallback { locationResult ->
                     if (!locationResult.getStatus().isSuccess()) {
@@ -142,8 +126,9 @@ class MainActivity : AppCompatActivity() {
                     snapshotApiData.setText("Lat: " + location.getLatitude() + ", Lon: " + location.getLongitude())
                 })
     }
+
     @SuppressLint("MissingPermission")
-    private fun initPlaceSnapshots(){
+    private fun initPlaceSnapshots() {
         Awareness.SnapshotApi.getPlaces(mGoogleApiClient)
                 .setResultCallback(ResultCallback { placesResult ->
                     if (!placesResult.status.isSuccess) {
@@ -155,21 +140,23 @@ class MainActivity : AppCompatActivity() {
                     if (placeLikelihoodList != null) {
                         var i = 0
 
-                        val data = "Places : \n"
-                        while (i < 5 && i < placeLikelihoodList.size) {
+                        val data = StringBuilder()
+                        while (i < placeLikelihoodList.size) {
                             val p = placeLikelihoodList[i]
                             Log.i(TAG, p.place.name.toString() + ", likelihood: " + p.likelihood)
-                            data+p.place.name.toString() + ", likelihood: " + p.likelihood
+                            data.append(p.place.name.toString() + ", likelihood: " + p.likelihood + "\n")
                             i++
                         }
-                        snapshotApiData.setText(data)
+                        Log.i(TAG, "final : " + data.toString())
+                        snapshotApiData.setText(data.toString())
                     } else {
                         Log.e(TAG, "Place is null.")
                     }
                 })
     }
+
     @SuppressLint("MissingPermission")
-    private fun initWeatherSnapshots(){
+    private fun initWeatherSnapshots() {
         Awareness.SnapshotApi.getWeather(mGoogleApiClient)
                 .setResultCallback(ResultCallback { weatherResult ->
                     if (!weatherResult.status.isSuccess) {
@@ -184,7 +171,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (grantResults[0]==PackageManager.PERMISSION_DENIED)
+        if (grantResults[0] == PackageManager.PERMISSION_DENIED)
             requestPermissions(
                     arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
                     1)
